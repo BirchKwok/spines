@@ -1,4 +1,4 @@
-from . import *
+from spines import *
 
 
 class DataFrameWrapper(pd.DataFrame):
