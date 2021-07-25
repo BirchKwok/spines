@@ -1,4 +1,5 @@
-from spines import *
+import pandas as pd
+import numpy as np
 
 
 class DataFrameWrapper(pd.DataFrame):
