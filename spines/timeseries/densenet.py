@@ -2,7 +2,6 @@ import tensorflow as tf
 from spines.keras_lambda.lambdas import AddAxis
 
 
-# for gd_all
 class ConvBlock(tf.keras.layers.Layer):
     def __init__(self, num_channels):
         super(ConvBlock, self).__init__()
