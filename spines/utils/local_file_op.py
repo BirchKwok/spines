@@ -1,4 +1,6 @@
-from . import *
+import datetime
+import json
+import os
 
 
 def is_in_dayrange(filepath, day_num):
@@ -9,11 +11,12 @@ def is_in_dayrange(filepath, day_num):
         timeStruct = datetime.datetime.fromtimestamp(timestamp)
         return timeStruct
 
-    def get_file_modify_time(filepath):
+    def get_file_modify_time():
         t = os.path.getmtime(filepath)
         return timestamp2time(t)
 
-    return (get_file_modify_time(filepath) + datetime.timedelta(days=day_num)) > datetime.datetime.today()
+    return (get_file_modify_time() + datetime.timedelta(days=day_num)) > datetime.datetime.today()
+
 
 def use_json(json_path, method='r', json_dict=None):
     if method == 'r':
@@ -26,9 +29,7 @@ def use_json(json_path, method='r', json_dict=None):
             raise FileNotFoundError(f"No such file or directory:{json_path}")
 
     elif method == 'w':
-        if json_dict == None:
+        if json_dict is None:
             raise ValueError("If method is 'w', the parameter json_dict must be not None.")
         with open(json_path, 'w') as f:
             json.dump(json_dict, f)
-
-        return

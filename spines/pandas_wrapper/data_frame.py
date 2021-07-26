@@ -1,37 +1,15 @@
 import pandas as pd
 import numpy as np
+from spines.utils.series_op import value_type_detector
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 
 class DataFrameWrapper(pd.DataFrame):
     """
-    定义一个类，继承pandas.DataFrame，方便查看数据和其他EDA定制化数据查看需求。
+    Define a class, inherit Pandas.DataFrame,
+    facilitate viewing data and other EDA customized data viewing requirements.
     """
-    @staticmethod
-    def _value_type_detector(col):
-        """
-        判断传入列的每个值是否为空字符串，并获取该值数据类型。
-        params:
-        col: pandas Series
-        returns：
-        一个列表，包含该列的空字符串数目、以及一个该列所有值的数据类型的set集合。
-        """
-        count = 0
-        types = list()
-        random_results = dict()
-        for j in col:
-            if isinstance(j, str) and j.strip() == "":
-                count += 1
-            type_j = type(j)
-            if type_j not in types:
-                types.append(type_j)
-            if type_j.__name__ not in random_results.keys():
-                random_results[type_j.__name__] = 0
-
-        for k in random_results.keys():
-            for t in types:
-                random_results[k] = pd.Series([i for i in col if isinstance(i, t)]).sample(2).values
-
-        return count, [i.__name__ for i in types], random_results
 
     @staticmethod
     def _plot_na(pv: pd.DataFrame, percentage: bool = True):
@@ -55,35 +33,29 @@ class DataFrameWrapper(pd.DataFrame):
         ax2.yaxis.tick_right()
         for a, b in enumerate(_.values):
             ax2.text(b, a, pv['valueTypes'][a])
-
         plt.show()
 
     @property
     def preview(self):
         """
-        用于数据预览，查看数据集的各种数据属性。
+        For data previews, to check various data properties of the dataset.
         returns:
-        total: 数量,
-        na: 空值,
-        naPercent: 空值所占该列比例,
-        dtype: 该列的数据类型(dtype),
-        max: 该列最大值,
-        75%: 75%分位数,
-        median: 中位数,
-        25%: 25%分位数,
-        min:该列最小值,
-        mean: 均值,
-        mode: 众数,
-        variation: 异众比率,
-        std: 标准差,
-        skew: 偏度系数,
-        kurt: 峰度系数,
-        samples: 随机返回该列两个值
+        total: number of elements
+        na: null values
+        naPercent: null value accounts for this ratio
+        dtype: datatype
+        75%: 75% quantile
+        25%: 25% quantile
+        variation: variation ratio
+        std: standard deviation
+        skew: Skewness
+        kurt: Kurtosis
+        samples: Random returns two values
         """
-        # ind = self.index
+
         col = self.columns
         ind_len = self.shape[0]
-        # col_len = len(col)
+
         df = pd.DataFrame(columns=('total', 'na', 'naPercent', 'dtype', 'max', '75%', 'median',
                                    '25%', 'min', 'mean', 'mode', 'variation', 'std', 'skew', 'kurt', 'samples'))
 
@@ -139,17 +111,17 @@ class DataFrameWrapper(pd.DataFrame):
     @property
     def abnormal(self):
         """
-        查看数据集的异常值情况。
-        returns：
-        na: 该列的空值数目,
-        nullStrings: 该列空字符串数目,
-        valueTypes：该列所有数值的数据类型set集合
+        View the outliers of the data set.
+        returns： pd.DataFrame
+        na: Number of null values of this column
+        nullStrings: Number of empty strings
+        valueTypes：Datatype set for all values in this column
         """
         df = pd.DataFrame(columns=('na', 'naPercent', 'nullStrings', 'valueTypes', 'samples'))
 
         for i in self.columns:
             na = self[i].isna()
-            null_strings, value_types, samples = self._value_type_detector(self[i])
+            null_strings, value_types, samples = value_type_detector(self[i])
             df.loc[i] = pd.Series({
                 'na': sum(na),
                 'naPercent': sum(na) / len(self[i]),
@@ -162,10 +134,9 @@ class DataFrameWrapper(pd.DataFrame):
 
     def abnormal_plot(self, plot_na_percent=True):
         """
-        plot abnormal value distribute .
-
-        :param plot_na_percent: whether plot the percent of nan value .
-        :return: None
+        plot outliers distribute.
+        plot_na_percent: whether plot the percent of nan value .
+        return: None
         """
         df = self.abnormal
         if plot_na_percent:
@@ -174,18 +145,26 @@ class DataFrameWrapper(pd.DataFrame):
             self._plot_na(df, percentage=False)
 
 
-def compare_shape(old_df_name, new_df_name):
-    """compare old and new dataset shape"""
-    if not (isinstance(old_df_name, pd.DataFrame) and isinstance(new_df_name, pd.DataFrame)):
-        raise TypeError("the parameters must be pandas data frames.")
-    a = old_df_name.shape
-    b = new_df_name.shape
-    print(f'The rows of two data frames are equal: {a[0] == b[0]}')
-    return a, b
+def compare_shape(*df):
+    """Compare Pandas DataFrames shapes."""
+    assert all([isinstance(i, pd.DataFrame) for i in df]) is True, \
+        "The parameters must be pandas DataFrames."
+
+    shapes = [d.shape for d in df]
+    shape_row = set([i[0] for i in shapes])
+    shape_col = set([i[1] for i in shapes])
+
+    print(f'The rows of DataFrames are equal: {"yes" if len(shape_row) == 1 else "no"}')
+    print(f'The cols of DataFrames are equal: {"yes" if len(shape_col) == 1 else "no"}')
+    return shapes
 
 
 def num_of_na(df):
-    """return data frame null value number."""
+    """
+    df: pandas DataFrame
+    return:
+    the number of null values in Pandas DataFrame.
+    """
     null_details = np.sum(df.isna())
     null_sum = np.sum(null_details)
     print(f"Total null value number is : {null_sum}")
@@ -196,21 +175,3 @@ def num_of_na(df):
                 res[k] = v
         return res
     return
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

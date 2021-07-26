@@ -1,5 +1,6 @@
 import tensorflow as tf
 
+
 class AddAxis(tf.keras.layers.Layer):
     """ Add Axis layer. """
 
@@ -18,7 +19,7 @@ class TimesNum(tf.keras.layers.Layer):
         super(TimesNum, self).__init__()
         self.level_digit = level_digit
 
-    def call(self, inputs):
+    def __call__(self, inputs):
         return inputs * self.level_digit
 
 
@@ -40,3 +41,4 @@ class Squeeze(tf.keras.layers.Layer):
 
     def call(self, inputs):
         return tf.squeeze(inputs)
+

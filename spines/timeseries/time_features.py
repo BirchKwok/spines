@@ -1,7 +1,10 @@
-from . import *
+import pandas as pd
+import chinese_calendar as calendar
+import datetime
+
 
 class FeatureBuilder:
-
+    """Build Features. """
     @staticmethod
     def add_timestamp(df, ts_col) -> pd.DataFrame:
         """
@@ -40,9 +43,9 @@ class FeatureBuilder:
             return legal_hday
         else:
             legal_hday_dict = dict()
-            for i in get_legal_hday(start=start, end=end, include_weekends=include_weekends)['fest_name'].unique():
+            for i in FeatureBuilder().get_legal_hday(start=start, end=end, include_weekends=include_weekends)['fest_name'].unique():
                 legal_hday_dict[i] = set()
-            for index, row in get_legal_hday(start=start, end=end, include_weekends=include_weekends).iterrows():
+            for index, row in FeatureBuilder().get_legal_hday(start=start, end=end, include_weekends=include_weekends).iterrows():
                 for k in legal_hday_dict.keys():
                     if row['fest_name'] == k:
                         legal_hday_dict[k].add(row['date'])
@@ -160,7 +163,7 @@ class FeatureBuilder:
         return total_dataset.reset_index(drop=True)
 
     @staticmethod
-    def WindowEvalutionCV(df, target_col, ts_col, cv=5, window_length=30):
+    def window_evaluation_cv(df, target_col, ts_col, cv=5, window_length=30):
         """
         使用滑动窗口法切割时间序列数据，要求传入数据为时间顺序序列
         返回一个迭代器。

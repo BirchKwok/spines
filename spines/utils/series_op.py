@@ -1,13 +1,15 @@
-from . import *
+import pandas as pd
 
 
-def _value_type_detector(col):
+def value_type_detector(col:pd.Series):
     """
-    判断传入列的每个值是否为空字符串，并获取该值数据类型。
+    Determines whether each value passed to the column is an empty string
+    and gets the value data type.
     params:
     col: pandas Series
     returns：
-    一个列表，包含该列的空字符串数目、以及一个该列所有值的数据类型的set集合。
+    A list containing the number of empty strings for the column
+    and a set of data types for all the values of the column.
     """
     count = 0
     types = list()
@@ -26,3 +28,6 @@ def _value_type_detector(col):
             random_results[k] = pd.Series([i for i in col if isinstance(i, t)]).sample(2).values
 
     return count, [i.__name__ for i in types], random_results
+
+
+

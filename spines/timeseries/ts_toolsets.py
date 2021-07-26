@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 
 
-def _split_sequences(x_seq:pd.Series, y_seq:pd.Series, window_size, pred_days):
+def _split_sequences(x_seq: pd.Series, y_seq: pd.Series, window_size, pred_days):
     assert isinstance(x_seq, pd.Series) is True and isinstance(y_seq, pd.Series) is True
 
     x_seq = x_seq.values
@@ -24,7 +24,7 @@ def _split_sequences(x_seq:pd.Series, y_seq:pd.Series, window_size, pred_days):
     return np.array(X), np.array(y)
 
 
-def _split_arrays(x_seq:pd.Series, y_seq:pd.Series, window_size, pred_days):
+def _split_arrays(x_seq: pd.Series, y_seq: pd.Series, window_size, pred_days):
     assert isinstance(x_seq, pd.Series) is True and isinstance(y_seq, pd.Series) is True
 
     x_seq = x_seq.values

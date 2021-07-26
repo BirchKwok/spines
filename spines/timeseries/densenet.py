@@ -1,5 +1,5 @@
 import tensorflow as tf
-from ..keras_lambda.lambdas import AddAxis
+from spines.keras_lambda.lambdas import AddAxis
 
 
 # for gd_all
