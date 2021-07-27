@@ -24,28 +24,30 @@ class Traditional:
         moving average method.
         series: pd.Series
         period: predict period
-        weights:
+        weights: Weighted moving average, the greater the list index, the later the date.
         return:
-        pd.Series
+        pd.Series, the predict values.
         """
+        assert isinstance(series, pd.Series), "series must be pandas Series."
         assert isinstance(period, int), "period must be integer."
+        assert isinstance(weights, list) or weights is None, "weights must be None or List."
         if isinstance(weights, list) is True:
             assert len(weights) == period, "weights length must be equals to period."
 
         if weights is not None:
-            res = [np.nan for i in range(period - 1)]
+            res = [np.nan for i in range(period)]
             _ = []
             for i in list(series.rolling(period)):
                 if len(i) == period:
                     _.append(i.values)
-
-            for j in range(len(_)):
-                t = []
-                for i, c in zip(weights, _[j]):
-                    t.append(c * i)
-                res.append(np.round(np.mean(t), 3))
+                    
+            assert len(_) > 0, "List length must be greater than 0."
+            _ = np.round(np.sum(np.stack(_, axis=0) * weights, axis=1), 2)
+            res.extend(_)
 
             return res
         else:
-            return series.rolling(period).mean().to_list()
+            res = series.rolling(period+1).mean().to_list()
+            res.append(np.mean([res[-1], res[-2]]))
+            return res
 
