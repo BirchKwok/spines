@@ -51,5 +51,3 @@ class Traditional:
             res = series.rolling(period+1).mean().to_list()
             res.append(np.mean([res[-1], res[-2]]))
             return res
-
-    
