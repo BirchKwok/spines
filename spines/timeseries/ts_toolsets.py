@@ -44,3 +44,5 @@ def _split_arrays(x_seq: pd.Series, y_seq: pd.Series, window_size, pred_days):
         y.append(seq_y)
 
     return np.array(X), np.squeeze(np.array(y))
+
+

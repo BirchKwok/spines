@@ -97,3 +97,6 @@ def net(shape, output_nums):
                 )
     return net
 
+
+__all__ = ['net']
+

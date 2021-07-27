@@ -154,3 +154,6 @@ class MultivariateRegression:
 
     def load_model(self):
         raise NotImplementedError("Not implemented.")
+
+
+__all__ = ["UnivariateRegression"]
