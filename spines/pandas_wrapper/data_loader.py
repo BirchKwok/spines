@@ -4,17 +4,26 @@ import pandas as pd
 import numpy as np
 
 
-def load_csv(path) -> pd.DataFrame:
-    """To load standard input data to machine memory."""
+def load_data(path, file_type='csv', sheet_name=0, **kwargs) -> pd.DataFrame:
+    """
+    To load standard input data to machine memory.
+    file_type: csv, excel
+    """
+    df = pd.DataFrame()
+    if file_type == 'csv':
+        try:
+            df = pd.read_csv(path, **kwargs)
 
-    try:
-        df = pd.read_csv(path)
-    except UnicodeError:
-        df = pd.read_csv(path, encoding='gbk')
-    except (FileNotFoundError, NameError):
-        raise FileLoadingError(f"Please check your path, no such file or directory: '{path}'")
-    except (RuntimeError, OSError):
-        df = pd.read_csv(path, engine='python')
+        except UnicodeError:
+            df = pd.read_csv(path, encoding='gbk', **kwargs)
+
+        except (FileNotFoundError, NameError):
+            raise FileLoadingError(f"Please check your path, no such file or directory: '{path}'")
+        except (RuntimeError, OSError):
+            df = pd.read_csv(path, engine='python', **kwargs)
+
+    elif file_type == 'excel':
+        df = pd.read_excel(path, sheet_name=sheet_name, **kwargs)
 
     return dfw(df)
 
@@ -59,5 +68,3 @@ def reduce_mem_data(df, verbose=True):
         print(f'Memory usage after optimization is: {round(end_mem, 2)} MB  ')
         print(
             f'Decreased by {round(100 * (start_mem - end_mem) / start_mem, 1)} %')
-
-

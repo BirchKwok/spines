@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 
+
 class Traditional:
     """
     Traditional methods for time series.
@@ -51,3 +52,4 @@ class Traditional:
             res.append(np.mean([res[-1], res[-2]]))
             return res
 
+    
