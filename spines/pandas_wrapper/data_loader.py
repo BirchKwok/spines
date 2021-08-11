@@ -1,5 +1,5 @@
 from spines.built_in_exceptions.built_in_exceptions import FileLoadingError
-from data_frame import DataFrameWrapper as dfw
+from spines.pandas_wrapper.data_frame import DataFrameWrapper as dfw
 import pandas as pd
 import numpy as np
 

@@ -1,6 +1,5 @@
-import numpy as np
-import pandas as pd
 from collections import Counter
+from scipy import sparse as sp
 
 
 class TfidfTransformer:
@@ -25,11 +24,11 @@ class BoWTransformer:
     def __init__(self):
         self.model = None
         self.corpus_ = None
-        self.get_vocab_ = None
-        self.vocab_dict_ = dict()
+        self.get_vocab_ = dict()
+        self.freq_dict_ = dict()
 
     def _get_vocab_dict(self, x):
-        self.vocab_dict_ = Counter(x)
+        self.freq_dict_ = Counter(x)
 
     def _get_vocab_idx(self, x: list):
         for i in list(set(x)):
@@ -40,16 +39,21 @@ class BoWTransformer:
         self._get_vocab_dict(corpus)
         self._get_vocab_idx(self.corpus_)
 
+        return self
+
     def transform(self, corpus):
-        res = []
-        for i in range(len(corpus)):
-            res.append([(i, self.corpus_.index(corpus[i])), self.vocab_dict_[corpus[i]]])
-        return res
+        sen_idx = [i for i in range(len(corpus))]
+        word_idx = [self.corpus_.index(corpus[i]) for i in range(len(corpus))]
+        word_freq = [self.freq_dict_[corpus[i]] for i in range(len(corpus))]
+
+        X = sp.csr_matrix((word_freq, (sen_idx, word_idx)))
+
+        return X
 
     def fit_transform(self, corpus):
         self.fit(corpus)
         return self.transform(corpus)
 
-    def get_feature_names(self):
-        return list(self.corpus_)
+
+
 
