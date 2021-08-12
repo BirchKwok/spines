@@ -1,59 +1,145 @@
 from collections import Counter
 from scipy import sparse as sp
+import re
+import numpy as np
 
 
-class TfidfTransformer:
-    def __init__(self):
-        self.get_vocab_ = dict()
+__all__ = [
+    'BoWTransformer',
+    'TfidfTransformer'
+]
 
-    @staticmethod
-    def _counter(x: list)->dict:
-        return Counter(x)
 
-    def _get_vocab(self, x: list):
-        for i in list(set(x)):
-            self.get_vocab_[i] = x.index(i)
+def _check_stop_list(stop):
+    if stop == "english":
+        return STOP_WORDS_EN
+    elif stop == 'chinese':
+        return STOP_WORDS_ZH
+    elif isinstance(stop, str):
+        raise ValueError("not a built-in stop list: %s" % stop)
+    elif stop is None:
+        return None
+    else:  
+        return frozenset(stop)
 
-    def fit(self, corpus: list):
-        assert isinstance(corpus, list) is True
-        self._get_vocab(corpus)
+def _lower_en(doc):
+    return doc.lower()
+
+def _re_pattern(pattern='(?u)\b\w\w+\b'):
+    return re.compile(pattern)
 
 
 class BoWTransformer:
     """Bag of words."""
-    def __init__(self):
-        self.model = None
-        self.corpus_ = None
-        self.get_vocab_ = dict()
-        self.freq_dict_ = dict()
+    def __init__(self, lowercase=True, token_pattern=r"(?u)\b\w+\b",
+                stop_words=None, vocabulary=None, drop_oov=True):
+        self.lowercase = lowercase
+        self._init_corpus = None
+        self.uni_corpus_ = None
+        self.vocabulary = list(set(vocabulary)) if vocabulary is not None else vocabulary
+        self.get_corpus_idx_ = dict()
+        self.get_corpus_freq_ = dict()
+        self._token_pattern = _re_pattern(pattern=token_pattern)
+        self._stop_words = _check_stop_list(stop_words)
+        self.drop_oov = drop_oov
+        self._corpus_sentence = None
 
-    def _get_vocab_dict(self, x):
-        self.freq_dict_ = Counter(x)
+    
+        
+    def _split_sentence(self):
+        """split sentence to words"""
+        return self._token_pattern.findall
+    
+    
+    def _get_corpus_freq_dict(self, x):
+        """
+        count words frequence.
+        return :
+        a dict like {word: word frequence}
+        """
+        self.get_corpus_freq_ = Counter(x)
 
-    def _get_vocab_idx(self, x: list):
-        for i in list(set(x)):
-            self.get_vocab_[i] = x.index(i)
+    def _get_corpus_idx(self, x: list):
+        """
+        get sentences index in vocabulary. 
+        return :
+        a dict like {sentence: sentence index}
+        """
+        for i in x:
+            self.get_corpus_idx_[i] = x.index(i)
+    
+    def _get_doc_list(self, doc):
+        """split words into list"""
+        
+        if self.lowercase:
+            doc = _lower_en(doc)
+            
+        spliter = self._split_sentence()
+        
+        
+        for i in doc:
+            if '\u4e00' <= i <= '\u9fa5':  # if character is chinese
+                return doc
+            
+        return spliter(doc)
+         
 
     def fit(self, corpus: list):
-        self.corpus_ = list(set(corpus))
-        self._get_vocab_dict(corpus)
-        self._get_vocab_idx(self.corpus_)
+        if self.vocabulary is None:
+            self._init_corpus = []
+            self._corpus_sentence = []
+            
+            for i in corpus:
+                tmp = self._get_doc_list(i)
+                if isinstance(tmp, str):
+                    self._init_corpus.append(tmp)
+                else:
+                    self._init_corpus.extend(tmp)
+                
+                self._corpus_sentence.append(tmp)
+                
+            
+            self.uni_corpus_ = list(set(self._init_corpus)) 
+            self._get_corpus_freq_dict(self._init_corpus)    
+            self._get_corpus_idx(self.uni_corpus_)
+        else:
+            self.uni_corpus_ = self.vocabulary 
+            self._get_corpus_freq_dict(corpus)    
+            self._get_corpus_idx(self.uni_corpus_)
 
         return self
 
+    
     def transform(self, corpus):
-        sen_idx = [i for i in range(len(corpus))]
-        word_idx = [self.corpus_.index(corpus[i]) for i in range(len(corpus))]
-        word_freq = [self.freq_dict_[corpus[i]] for i in range(len(corpus))]
+        assert self.uni_corpus_ is not None and self.get_corpus_idx_ is not None and self.get_corpus_freq_ is not None, \
+        "Not fit yet."
+        c = []
+        for i in corpus:
+            tmp = self._get_doc_list(i)
+            if isinstance(tmp, str):
+                c.append(tmp)
+            else:
+                c.extend(tmp)
 
-        X = sp.csr_matrix((word_freq, (sen_idx, word_idx)))
+        
+        indptr = [0]
+        
+        indices = []
+        
+        num = np.sum([len(i) for i in self._corpus_sentence])
+        data = [self.get_corpus_freq_[c[i]] for i in range(num)]
+
+        for d in self._corpus_sentence:
+            for term in d:
+                indices.append(self.get_corpus_idx_[term])
+                
+            indptr.append(len(indices))   
+        
+        X = sp.csr_matrix((data, indices, indptr))
 
         return X
 
     def fit_transform(self, corpus):
         self.fit(corpus)
         return self.transform(corpus)
-
-
-
-
+    
