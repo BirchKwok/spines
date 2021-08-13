@@ -86,26 +86,35 @@ class BoWTransformer:
         return splitter(doc)
 
     def fit(self, corpus: list):
-        if self.vocabulary_ is None:
-            self._init_corpus = []
-            self._corpus_sentence = []
 
-            for i in corpus:
-                tmp = self._get_doc_list(i)
-                if isinstance(tmp, str):
-                    self._init_corpus.append(tmp)
+        self._init_corpus = []
+        self._corpus_sentence = []
+
+        for i in corpus:
+            tmp = self._get_doc_list(i)
+            if isinstance(tmp, str):
+                if self._stop_words is not None:
+                    if tmp not in self._stop_words:
+                        self._init_corpus.append(tmp)
                 else:
-                    self._init_corpus.extend(tmp)
+                    self._init_corpus.append(tmp)
+            elif isinstance(tmp, list):
+                if self._stop_words is not None:
+                    tmp = [i for i in tmp if i not in self._stop_words]
+                self._init_corpus.extend(tmp)
 
-                self._corpus_sentence.append(tmp)
+            self._corpus_sentence.append(tmp)
 
+        if self.vocabulary_ is None:
             self.uni_corpus_ = list(set(self._init_corpus))
-            self._get_corpus_freq_dict(self._init_corpus)
-            self._get_corpus_idx(self.uni_corpus_)
         else:
             self.uni_corpus_ = self.vocabulary_
-            self._get_corpus_freq_dict(corpus)
-            self._get_corpus_idx(self.uni_corpus_)
+
+        self._get_corpus_freq_dict(self._init_corpus)
+        self._get_corpus_idx(self.uni_corpus_)
+
+            # self._get_corpus_freq_dict(corpus)
+            # self._get_corpus_idx(self.uni_corpus_)
 
         return self
 
@@ -118,8 +127,14 @@ class BoWTransformer:
         for i in corpus:
             tmp = self._get_doc_list(i)
             if isinstance(tmp, str):
-                c.append(tmp)
+                if self._stop_words is not None:
+                    if tmp not in self._stop_words:
+                        c.append(tmp)
+                else:
+                    c.append(tmp)
             else:
+                if self._stop_words is not None:
+                    tmp = [i for i in tmp if i not in self._stop_words]
                 c.extend(tmp)
 
         indptr = [0]
@@ -127,10 +142,12 @@ class BoWTransformer:
         indices = []
 
         num = np.sum([len(i) if isinstance(i, Iterable) is True and isinstance(i, str) is False \
-                          else 1 for i in self._corpus_sentence])
+                        else 1 for i in self._corpus_sentence])
+        print('num', num)
+        print('c', c)
 
         data = [self.get_corpus_freq_[c[i]] for i in range(num)]
-
+        print(data)
         for d in self._corpus_sentence:
             if isinstance(d, Iterable) is True and isinstance(d, str) is False:
                 for term in d:
@@ -149,7 +166,10 @@ class BoWTransformer:
         return self.transform(corpus)
 
     def inverse_transform(self, arr):
+        assert isinstance(arr, list) or isinstance(arr, np.array)
         arr = np.asarray(arr)
+
+        assert arr.ndim == 2
         arr_shape = arr.shape
         res = []
         for i in range(arr_shape[0]):
